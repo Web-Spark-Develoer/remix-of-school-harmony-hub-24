@@ -23,6 +23,9 @@ import StaffClasses from "./pages/staff/StaffClasses";
 import StaffReports from "./pages/staff/StaffReports";
 import AdminStudentUpload from "./pages/staff/AdminStudentUpload";
 import AdminUsers from "./pages/staff/AdminUsers";
+import AdminTeachers from "./pages/staff/AdminTeachers";
+import AdminDepartments from "./pages/staff/AdminDepartments";
+import AdminClasses from "./pages/staff/AdminClasses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -107,6 +110,8 @@ const App = () => (
                 <StaffReports />
               </ProtectedRoute>
             } />
+            
+            {/* Admin Only Pages */}
             <Route path="/staff/admin/students" element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminStudentUpload />
@@ -115,6 +120,21 @@ const App = () => (
             <Route path="/staff/admin/users" element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminUsers />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/admin/teachers" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminTeachers />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/admin/departments" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDepartments />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/admin/classes" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminClasses />
               </ProtectedRoute>
             } />
             
