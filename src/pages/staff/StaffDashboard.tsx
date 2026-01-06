@@ -148,10 +148,10 @@ const StaffDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { icon: "edit_note", label: "Upload Grades", href: "/staff/gradebook", color: "primary" },
-            { icon: "person_add", label: "Admissions", href: "/staff/admissions", color: "success" },
+            { icon: "person_add", label: "Admissions", href: "/staff/admissions", color: "success", adminOnly: true },
             { icon: "group", label: "Students", href: "/staff/students", color: "warning" },
             { icon: "fact_check", label: "Attendance", href: "/staff/attendance", color: "info" },
-          ].map((action, idx) => (
+          ].filter(a => !a.adminOnly || userRole === "admin").map((action, idx) => (
             <Link key={idx} to={action.href}>
               <Card className="p-4 card-hover-subtle cursor-pointer group">
                 <div className="flex flex-col items-center gap-3 text-center">
@@ -166,6 +166,36 @@ const StaffDashboard = () => {
             </Link>
           ))}
         </div>
+
+        {/* Admin Quick Links */}
+        {userRole === "admin" && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">admin_panel_settings</span>
+                Admin Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {[
+                  { icon: "person_add", label: "Add Teachers", href: "/staff/admin/teachers" },
+                  { icon: "class", label: "Manage Classes", href: "/staff/admin/classes" },
+                  { icon: "domain", label: "Departments", href: "/staff/admin/departments" },
+                  { icon: "upload_file", label: "Bulk Upload", href: "/staff/admin/students" },
+                  { icon: "shield_person", label: "Admin Users", href: "/staff/admin/users" },
+                ].map((item, idx) => (
+                  <Link key={idx} to={item.href}>
+                    <Button variant="outline" className="w-full h-auto py-3 flex flex-col gap-1">
+                      <span className="material-symbols-outlined text-primary">{item.icon}</span>
+                      <span className="text-xs">{item.label}</span>
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Dashboard Grid */}
         <div className="grid lg:grid-cols-3 gap-6">

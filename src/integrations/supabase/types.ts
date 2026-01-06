@@ -312,6 +312,38 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          head_teacher_id: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          head_teacher_id?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          head_teacher_id?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_head_teacher_id_fkey"
+            columns: ["head_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           approved_by: string | null
@@ -628,6 +660,7 @@ export type Database = {
         Row: {
           created_at: string
           department: string | null
+          department_id: string | null
           email: string
           employee_id: string
           first_name: string
@@ -642,6 +675,7 @@ export type Database = {
         Insert: {
           created_at?: string
           department?: string | null
+          department_id?: string | null
           email: string
           employee_id: string
           first_name: string
@@ -656,6 +690,7 @@ export type Database = {
         Update: {
           created_at?: string
           department?: string | null
+          department_id?: string | null
           email?: string
           employee_id?: string
           first_name?: string
@@ -667,7 +702,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teachers_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       term_results: {
         Row: {
