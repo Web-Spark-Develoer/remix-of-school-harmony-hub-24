@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { StaffLayout } from "@/components/layout/StaffLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TableSkeleton } from "@/components/ui/loading-skeleton";
 import { InlineEmptyState } from "@/components/ui/empty-state";
 import { Users } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Student {
   id: string;
@@ -22,6 +24,8 @@ interface Student {
 }
 
 const StaffStudents = () => {
+  const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -192,12 +196,24 @@ const StaffStudents = () => {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/staff/students/${student.id}`)}
+                              title="View Profile"
+                            >
                               <span className="material-symbols-outlined text-lg">visibility</span>
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <span className="material-symbols-outlined text-lg">edit</span>
-                            </Button>
+                            {userRole === "admin" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(`/staff/students/${student.id}`)}
+                                title="Edit"
+                              >
+                                <span className="material-symbols-outlined text-lg">edit</span>
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
