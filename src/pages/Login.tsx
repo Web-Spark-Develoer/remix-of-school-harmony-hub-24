@@ -50,11 +50,12 @@ const Login = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user && !authLoading && userRole) {
+      setIsLoading(false);
       if (userRole === "student") {
-        navigate("/student");
+        navigate("/student", { replace: true });
       } else if (userRole === "teacher" || userRole === "admin") {
-        navigate("/staff");
+        navigate("/staff", { replace: true });
       }
     }
   }, [user, userRole, authLoading, navigate]);
@@ -106,9 +107,8 @@ const Login = () => {
 
     const { error } = await signIn(loginForm.email, loginForm.password);
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       let message = "Invalid credentials. Please try again.";
       if (error.message?.includes("Invalid login")) {
         message = "Invalid email or password. Please check your credentials.";
@@ -126,8 +126,9 @@ const Login = () => {
 
     toast({
       title: "Welcome back!",
-      description: "You have successfully logged in.",
+      description: "You have successfully logged in. Redirecting...",
     });
+    // Keep isLoading true - the useEffect will handle redirect once userRole is set
   };
 
   const handleRegister = async (e: React.FormEvent) => {
