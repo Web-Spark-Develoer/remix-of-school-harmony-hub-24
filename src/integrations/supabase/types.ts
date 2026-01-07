@@ -855,6 +855,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
       application_status: "pending" | "accepted" | "rejected"
