@@ -550,6 +550,9 @@ export type Database = {
         Row: {
           address: string | null
           admission_date: string | null
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           class_id: string | null
           created_at: string
           date_of_birth: string | null
@@ -562,6 +565,7 @@ export type Database = {
           last_name: string
           phone: string | null
           programme_id: string | null
+          rejection_reason: string | null
           status: string | null
           student_id: string
           updated_at: string
@@ -570,6 +574,9 @@ export type Database = {
         Insert: {
           address?: string | null
           admission_date?: string | null
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           class_id?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -582,6 +589,7 @@ export type Database = {
           last_name: string
           phone?: string | null
           programme_id?: string | null
+          rejection_reason?: string | null
           status?: string | null
           student_id: string
           updated_at?: string
@@ -590,6 +598,9 @@ export type Database = {
         Update: {
           address?: string | null
           admission_date?: string | null
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           class_id?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -602,6 +613,7 @@ export type Database = {
           last_name?: string
           phone?: string | null
           programme_id?: string | null
+          rejection_reason?: string | null
           status?: string | null
           student_id?: string
           updated_at?: string

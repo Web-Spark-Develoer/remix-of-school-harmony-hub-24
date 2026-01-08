@@ -50,16 +50,19 @@ interface Teacher {
   last_name: string;
 }
 
-const gradeLevels = [
-  { value: 7, label: "Grade 7" },
-  { value: 8, label: "Grade 8" },
-  { value: 9, label: "Grade 9" },
-  { value: 10, label: "Grade 10" },
-  { value: 11, label: "Grade 11" },
-  { value: 12, label: "Grade 12" },
+const schoolTypes = [
+  { value: "upper_basic", label: "Upper Basic School" },
+  { value: "senior_secondary", label: "Senior Secondary School" },
 ];
 
-const sections = ["A", "B", "C", "D", "E", "F", "G"];
+const gradeLevels = [
+  { value: 7, label: "Grade 7", school: "upper_basic" },
+  { value: 8, label: "Grade 8", school: "upper_basic" },
+  { value: 9, label: "Grade 9", school: "upper_basic" },
+  { value: 10, label: "Grade 10", school: "senior_secondary" },
+  { value: 11, label: "Grade 11", school: "senior_secondary" },
+  { value: 12, label: "Grade 12", school: "senior_secondary" },
+];
 
 const AdminClasses = () => {
   const { toast } = useToast();
@@ -70,9 +73,11 @@ const AdminClasses = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ClassData | null>(null);
   const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>("all");
+  const [selectedSchoolFilter, setSelectedSchoolFilter] = useState<string>("all");
   
   // Form state
   const [formData, setFormData] = useState({
+    name: "",
     grade_level: "",
     section: "",
     capacity: "50",
@@ -130,6 +135,7 @@ const AdminClasses = () => {
   const resetForm = () => {
     const currentYear = academicYears.find(y => y.is_current);
     setFormData({
+      name: "",
       grade_level: "",
       section: "",
       capacity: "50",
@@ -141,27 +147,33 @@ const AdminClasses = () => {
   };
 
   const handleAddClass = async () => {
-    if (!formData.grade_level || !formData.section || !formData.academic_year_id) {
-      toast({ title: "Error", description: "Please fill in required fields", variant: "destructive" });
+    if (!formData.name || !formData.school_type || !formData.academic_year_id) {
+      toast({ title: "Error", description: "Please fill in class name, school type, and academic year", variant: "destructive" });
       return;
     }
 
     try {
-      const className = `Grade ${formData.grade_level}${formData.section}`;
+      // Extract grade level from the class name (e.g., "7A" -> 7, "10A1" -> 10)
+      const gradeMatch = formData.name.match(/^(\d+)/);
+      const gradeLevel = gradeMatch ? parseInt(gradeMatch[1]) : 7;
+      
+      // Extract section from the class name (e.g., "7A" -> "A", "10A1" -> "A1")
+      const sectionMatch = formData.name.match(/^\d+(.+)$/);
+      const section = sectionMatch ? sectionMatch[1] : "A";
       
       const { error } = await supabase.from("classes").insert({
-        name: className,
-        grade_level: parseInt(formData.grade_level),
-        section: formData.section,
+        name: formData.name,
+        grade_level: gradeLevel,
+        section: section,
         capacity: parseInt(formData.capacity) || 50,
-        school_type: formData.school_type || null,
+        school_type: formData.school_type,
         specialization: formData.specialization || null,
         academic_year_id: formData.academic_year_id,
       });
 
       if (error) throw error;
 
-      toast({ title: "Success", description: `${className} created successfully` });
+      toast({ title: "Success", description: `${formData.name} created successfully` });
       setIsAddOpen(false);
       resetForm();
       fetchData();
@@ -175,14 +187,20 @@ const AdminClasses = () => {
     if (!editingClass) return;
 
     try {
-      const className = `Grade ${formData.grade_level}${formData.section}`;
+      // Extract grade level from the class name
+      const gradeMatch = formData.name.match(/^(\d+)/);
+      const gradeLevel = gradeMatch ? parseInt(gradeMatch[1]) : editingClass.grade_level;
+      
+      // Extract section from the class name
+      const sectionMatch = formData.name.match(/^\d+(.+)$/);
+      const section = sectionMatch ? sectionMatch[1] : editingClass.section;
       
       const { error } = await supabase
         .from("classes")
         .update({
-          name: className,
-          grade_level: parseInt(formData.grade_level),
-          section: formData.section,
+          name: formData.name,
+          grade_level: gradeLevel,
+          section: section,
           capacity: parseInt(formData.capacity) || 50,
           school_type: formData.school_type || null,
           specialization: formData.specialization || null,
@@ -232,6 +250,7 @@ const AdminClasses = () => {
   const openEditDialog = (cls: ClassData) => {
     setEditingClass(cls);
     setFormData({
+      name: cls.name,
       grade_level: cls.grade_level.toString(),
       section: cls.section,
       capacity: cls.capacity?.toString() || "50",
@@ -241,9 +260,11 @@ const AdminClasses = () => {
     });
   };
 
-  const filteredClasses = selectedGradeFilter === "all" 
-    ? classes 
-    : classes.filter(c => c.grade_level.toString() === selectedGradeFilter);
+  const filteredClasses = classes.filter(c => {
+    const matchesSchool = selectedSchoolFilter === "all" || c.school_type === selectedSchoolFilter;
+    const matchesGrade = selectedGradeFilter === "all" || c.grade_level.toString() === selectedGradeFilter;
+    return matchesSchool && matchesGrade;
+  });
 
   // Group classes by grade level
   const classesGrouped = filteredClasses.reduce((acc, cls) => {
@@ -274,53 +295,65 @@ const AdminClasses = () => {
                 <DialogTitle>Create New Class</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="grade_level">Grade Level *</Label>
-                    <Select
-                      value={formData.grade_level}
-                      onValueChange={(value) => setFormData({ ...formData, grade_level: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {gradeLevels.map((grade) => (
-                          <SelectItem key={grade.value} value={grade.value.toString()}>
-                            {grade.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="section">Section *</Label>
-                    <Select
-                      value={formData.section}
-                      onValueChange={(value) => setFormData({ ...formData, section: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select section" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sections.map((section) => (
-                          <SelectItem key={section} value={section}>
-                            {section}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="school_type">School *</Label>
+                  <Select
+                    value={formData.school_type}
+                    onValueChange={(value) => setFormData({ ...formData, school_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select school" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schoolTypes.map((school) => (
+                        <SelectItem key={school.value} value={school.value}>
+                          {school.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="capacity">Capacity</Label>
+                  <Label htmlFor="class_name">Class Name *</Label>
                   <Input
-                    id="capacity"
-                    type="number"
-                    value={formData.capacity}
-                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                    placeholder="50"
+                    id="class_name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g. 7A, 8B, 10A1, 12C2"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the grade number followed by section (e.g., 7A, 8G, 10A1, 12C2)
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="capacity">Capacity</Label>
+                    <Input
+                      id="capacity"
+                      type="number"
+                      value={formData.capacity}
+                      onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                      placeholder="50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="specialization">Specialization</Label>
+                    <Select
+                      value={formData.specialization}
+                      onValueChange={(value) => setFormData({ ...formData, specialization: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Optional" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="Art">Art</SelectItem>
+                        <SelectItem value="Science">Science</SelectItem>
+                        <SelectItem value="Commerce">Commerce</SelectItem>
+                        <SelectItem value="Technical">Technical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="academic_year">Academic Year *</Label>
@@ -340,15 +373,6 @@ const AdminClasses = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization (optional)</Label>
-                  <Input
-                    id="specialization"
-                    value={formData.specialization}
-                    onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                    placeholder="e.g. Science, Arts, Commerce"
-                  />
-                </div>
               </div>
               <DialogFooter>
                 <DialogClose asChild>
@@ -360,22 +384,40 @@ const AdminClasses = () => {
           </Dialog>
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-4">
-          <Label>Filter by Grade:</Label>
-          <Select value={selectedGradeFilter} onValueChange={setSelectedGradeFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Grades</SelectItem>
-              {gradeLevels.map((grade) => (
-                <SelectItem key={grade.value} value={grade.value.toString()}>
-                  {grade.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label>School:</Label>
+            <Select value={selectedSchoolFilter} onValueChange={setSelectedSchoolFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Schools</SelectItem>
+                {schoolTypes.map((school) => (
+                  <SelectItem key={school.value} value={school.value}>
+                    {school.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label>Grade:</Label>
+            <Select value={selectedGradeFilter} onValueChange={setSelectedGradeFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Grades</SelectItem>
+                {gradeLevels.map((grade) => (
+                  <SelectItem key={grade.value} value={grade.value.toString()}>
+                    {grade.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Stats */}
@@ -488,60 +530,61 @@ const AdminClasses = () => {
               <DialogTitle>Edit Class</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit_school_type">School</Label>
+                <Select
+                  value={formData.school_type}
+                  onValueChange={(value) => setFormData({ ...formData, school_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schoolTypes.map((school) => (
+                      <SelectItem key={school.value} value={school.value}>
+                        {school.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_name">Class Name</Label>
+                <Input
+                  id="edit_name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. 7A, 10A1"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit_grade_level">Grade Level</Label>
-                  <Select
-                    value={formData.grade_level}
-                    onValueChange={(value) => setFormData({ ...formData, grade_level: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gradeLevels.map((grade) => (
-                        <SelectItem key={grade.value} value={grade.value.toString()}>
-                          {grade.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="edit_capacity">Capacity</Label>
+                  <Input
+                    id="edit_capacity"
+                    type="number"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit_section">Section</Label>
+                  <Label htmlFor="edit_specialization">Specialization</Label>
                   <Select
-                    value={formData.section}
-                    onValueChange={(value) => setFormData({ ...formData, section: value })}
+                    value={formData.specialization}
+                    onValueChange={(value) => setFormData({ ...formData, specialization: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Optional" />
                     </SelectTrigger>
                     <SelectContent>
-                      {sections.map((section) => (
-                        <SelectItem key={section} value={section}>
-                          {section}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="Art">Art</SelectItem>
+                      <SelectItem value="Science">Science</SelectItem>
+                      <SelectItem value="Commerce">Commerce</SelectItem>
+                      <SelectItem value="Technical">Technical</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit_capacity">Capacity</Label>
-                <Input
-                  id="edit_capacity"
-                  type="number"
-                  value={formData.capacity}
-                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit_specialization">Specialization</Label>
-                <Input
-                  id="edit_specialization"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                />
               </div>
             </div>
             <DialogFooter>
