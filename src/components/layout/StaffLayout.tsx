@@ -22,7 +22,8 @@ import {
   LogOut,
   GraduationCap,
   Search,
-  Bell
+  Bell,
+  CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,7 @@ const adminNavItems = [
 ];
 
 const adminSettingsItems = [
+  { icon: CheckCircle, label: "Student Approvals", href: "/staff/admin/approvals" },
   { icon: Users, label: "Manage Teachers", href: "/staff/admin/teachers" },
   { icon: BookOpen, label: "Manage Classes", href: "/staff/admin/classes" },
   { icon: Settings, label: "Departments", href: "/staff/admin/departments" },

@@ -60,6 +60,7 @@ const AdminTeachers = () => {
     email: "",
     phone: "",
     department_id: "",
+    school_type: "",
     password: "",
   });
 
@@ -89,6 +90,7 @@ const AdminTeachers = () => {
       email: "",
       phone: "",
       department_id: "",
+      school_type: "",
       password: "",
     });
     setEditingTeacher(null);
@@ -201,6 +203,7 @@ const AdminTeachers = () => {
       email: teacher.email,
       phone: teacher.phone || "",
       department_id: teacher.department_id || "",
+      school_type: (teacher as any).school_type || "",
       password: "",
     });
   };
@@ -275,7 +278,22 @@ const AdminTeachers = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
+                  <Label htmlFor="school_type">School *</Label>
+                  <Select
+                    value={formData.school_type}
+                    onValueChange={(value) => setFormData({ ...formData, school_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select school" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="upper_basic">Upper Basic School</SelectItem>
+                      <SelectItem value="senior_secondary">Senior Secondary School</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department *</Label>
                   <Select
                     value={formData.department_id}
                     onValueChange={(value) => setFormData({ ...formData, department_id: value })}

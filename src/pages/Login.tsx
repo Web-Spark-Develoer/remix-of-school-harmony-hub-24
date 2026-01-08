@@ -31,7 +31,7 @@ type RegisterErrors = { firstName?: string; lastName?: string; email?: string; p
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp, user, userRole, isLoading: authLoading } = useAuth();
+  const { signIn, signUp, user, userRole, isLoading: authLoading, approvalStatus } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [userType, setUserType] = useState<"student" | "staff">("student");
@@ -53,12 +53,27 @@ const Login = () => {
     if (user && !authLoading && userRole) {
       setIsLoading(false);
       if (userRole === "student") {
-        navigate("/student", { replace: true });
+        // Check if student is approved
+        if (approvalStatus === "approved") {
+          navigate("/student", { replace: true });
+        } else if (approvalStatus === "pending") {
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is awaiting admin approval. Please check back later.",
+            variant: "destructive",
+          });
+        } else if (approvalStatus === "rejected") {
+          toast({
+            title: "Account Rejected",
+            description: "Your registration was not approved. Please contact the school administration.",
+            variant: "destructive",
+          });
+        }
       } else if (userRole === "teacher" || userRole === "admin") {
         navigate("/staff", { replace: true });
       }
     }
-  }, [user, userRole, authLoading, navigate]);
+  }, [user, userRole, authLoading, navigate, approvalStatus]);
 
   const validateLoginForm = () => {
     try {

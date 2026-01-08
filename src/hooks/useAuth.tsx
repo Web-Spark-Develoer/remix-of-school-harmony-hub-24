@@ -14,6 +14,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string; role?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  approvalStatus: string | null;
 }
 
 interface StudentData {
@@ -47,6 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [teacherData, setTeacherData] = useState<TeacherData | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
 
   useEffect(() => {
     // Set up auth state listener
@@ -64,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUserRole(null);
           setStudentData(null);
           setTeacherData(null);
+          setApprovalStatus(null);
           setIsLoading(false);
         }
       }
@@ -106,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           if (student) {
             setStudentData(student as StudentData);
+            setApprovalStatus((student as any).approval_status || 'pending');
           }
         } else if (roleData.role === 'teacher' || roleData.role === 'admin') {
           const { data: teacher } = await supabase
@@ -157,6 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserRole(null);
     setStudentData(null);
     setTeacherData(null);
+    setApprovalStatus(null);
   };
 
   return (
@@ -170,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signUp,
       signIn,
       signOut,
+      approvalStatus,
     }}>
       {children}
     </AuthContext.Provider>
